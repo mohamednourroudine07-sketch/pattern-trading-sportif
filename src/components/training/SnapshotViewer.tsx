@@ -239,7 +239,6 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
 
       {/* Zone Image avec Zoom & Plein Écran */}
       <div
-        onWheel={handleWheel}
         className={`relative bg-black overflow-hidden flex items-center justify-center select-none ${
           isFullscreen
             ? 'flex-1 h-full'
@@ -263,7 +262,8 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
               src={activeUrl}
               alt={`Capture ${activeSnapshot?.timeTag || activeSlotIndex + 1}`}
               onLoad={handleImageLoad}
-              className="max-w-full max-h-full object-contain pointer-events-none drop-shadow-2xl"
+              onWheel={handleWheel}
+              className="max-w-full max-h-full object-contain drop-shadow-2xl"
             />
           </div>
         ) : (

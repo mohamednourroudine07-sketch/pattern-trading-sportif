@@ -22,6 +22,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cachedPage = await caches.match(request);
+          const cachedApp = await caches.match(APP_ROOT);
+          if (cachedPage || cachedApp) return cachedPage || cachedApp;
+          throw new Error('Aucune page de l’application n’est disponible hors ligne.');
+        })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
