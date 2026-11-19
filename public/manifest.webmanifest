@@ -1,0 +1,19 @@
+{
+  "name": "Pattern Trading Sportif",
+  "short_name": "Pattern Sportif",
+  "description": "Entraînement visuel au marché Pair / Impair",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
