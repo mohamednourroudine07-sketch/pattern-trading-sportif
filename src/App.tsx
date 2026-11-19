@@ -94,6 +94,17 @@ export const App: React.FC = () => {
   // Match cible pour entraînement
   const [trainingTargetMatch, setTrainingTargetMatch] = useState<MatchRecord | null>(null);
 
+  useEffect(() => {
+    const preventTrackpadPageZoom = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('wheel', preventTrackpadPageZoom, { passive: false });
+    return () => window.removeEventListener('wheel', preventTrackpadPageZoom);
+  }, []);
+
   // Synchronisation du thème sombre / clair avec document.documentElement
   useEffect(() => {
     const root = document.documentElement;

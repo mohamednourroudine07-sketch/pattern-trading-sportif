@@ -125,6 +125,7 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
 
   // Zoom avec la molette de la souris
   const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) return;
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.25 : -0.25;
     setZoomLevel((z) => Math.max(1, Math.min(4, z + delta)));
