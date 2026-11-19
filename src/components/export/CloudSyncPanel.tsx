@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { liveQuery } from 'dexie';
 import { AlertTriangle, Cloud, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
 import { CloudSyncService } from '../../services/cloudSyncService';
-import { supabaseClient } from '../../services/supabaseClient';
+import { supabaseClient, supabaseConfigurationIssue } from '../../services/supabaseClient';
 
 const AUTO_SAVE_DEBOUNCE_MS = 5000;
 
@@ -293,7 +293,11 @@ export const CloudSyncPanel: React.FC<CloudSyncPanelProps> = ({ onDataReloaded }
         <div role="status" className="mt-4 flex gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>
-            La synchronisation cloud n’est pas encore configurée. Le propriétaire doit renseigner les identifiants Supabase dans les secrets GitHub et relancer la publication.
+            {supabaseConfigurationIssue === 'invalid-url'
+              ? 'Le secret VITE_SUPABASE_URL est incorrect. Il doit contenir l’adresse complète du projet Supabase, par exemple https://identifiant.supabase.co.'
+              : supabaseConfigurationIssue === 'missing-key'
+                ? 'Le secret VITE_SUPABASE_ANON_KEY manque dans GitHub. Ajoute la clé publique anon/publishable du projet, jamais la clé service_role.'
+                : 'La synchronisation cloud n’est pas encore configurée. Le propriétaire doit renseigner VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans les secrets GitHub puis relancer la publication.'}
           </span>
         </div>
       ) : session ? (
