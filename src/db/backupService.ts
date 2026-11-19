@@ -2,6 +2,9 @@ import JSZip from 'jszip';
 import { db } from './database';
 import { MatchRecord, MatchSnapshot, TrainingDecisionLog, StrategyConfig } from '../types';
 
+export const LAST_BACKUP_AT_KEY = 'bet360-last-backup-at';
+export const BACKUP_CREATED_EVENT = 'bet360:backup-created';
+
 export interface BackupMatchSnapshot extends Omit<MatchSnapshot, 'imageBlob'> {
   imageFileName: string;
 }
@@ -134,7 +137,14 @@ export class BackupService {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 2000);
+    localStorage.setItem(LAST_BACKUP_AT_KEY, String(Date.now()));
+    window.dispatchEvent(new Event(BACKUP_CREATED_EVENT));
     return fileName;
+  }
+
+  static getLastBackupAt(): number | null {
+    const savedAt = Number(localStorage.getItem(LAST_BACKUP_AT_KEY));
+    return Number.isFinite(savedAt) && savedAt > 0 ? savedAt : null;
   }
 
   /**

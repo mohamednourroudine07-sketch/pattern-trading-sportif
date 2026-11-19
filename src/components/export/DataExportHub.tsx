@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BackupService, DatabaseStats } from '../../db/backupService';
+import {
+  BACKUP_CREATED_EVENT,
+  BackupService,
+  DatabaseStats,
+} from '../../db/backupService';
 import { SyncService } from '../../services/syncService';
 import { seedDemoData } from '../../db/seedData';
 import {
@@ -26,6 +30,7 @@ interface DataExportHubProps {
 
 export const DataExportHub: React.FC<DataExportHubProps> = ({ onDataReloaded }) => {
   const [stats, setStats] = useState<DatabaseStats | null>(null);
+  const [lastBackupAt, setLastBackupAt] = useState<number | null>(() => BackupService.getLastBackupAt());
   const [isExportingZip, setIsExportingZip] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [isExportingJson, setIsExportingJson] = useState(false);
@@ -47,6 +52,9 @@ export const DataExportHub: React.FC<DataExportHubProps> = ({ onDataReloaded }) 
 
   useEffect(() => {
     refreshStats();
+    const handleBackupCreated = () => setLastBackupAt(BackupService.getLastBackupAt());
+    window.addEventListener(BACKUP_CREATED_EVENT, handleBackupCreated);
+    return () => window.removeEventListener(BACKUP_CREATED_EVENT, handleBackupCreated);
   }, []);
 
   // Synchronisation Push : Envoyer vers le PC
@@ -271,6 +279,18 @@ export const DataExportHub: React.FC<DataExportHubProps> = ({ onDataReloaded }) 
             <p className="text-xs text-slate-400 mt-1 max-w-xl">
               Vos captures et vos analyses restent 100% locales dans votre navigateur. Téléchargez à tout moment vos sauvegardes complètes en archive ZIP.
             </p>
+            <div
+              role="status"
+              className={`mt-3 rounded-xl border px-3 py-2 text-xs ${
+                lastBackupAt
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+              }`}
+            >
+              {lastBackupAt
+                ? `Dernier export ZIP lancé le ${new Date(lastBackupAt).toLocaleString('fr-FR')}. Pensez à conserver ce fichier hors de l’appareil.`
+                : 'Aucun export ZIP enregistré sur cet appareil. Téléchargez une sauvegarde pour protéger vos données locales.'}
+            </div>
           </div>
 
           <button

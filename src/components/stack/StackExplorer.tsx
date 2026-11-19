@@ -37,6 +37,10 @@ export const StackExplorer: React.FC<StackExplorerProps> = ({
   const [filterOutcome, setFilterOutcome] = useState<'ALL' | Outcome>('ALL');
   const [filterCompleteness, setFilterCompleteness] = useState<'ALL' | 'FULL_4' | 'INCOMPLETE'>('ALL');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [minOdds, setMinOdds] = useState('');
+  const [maxOdds, setMaxOdds] = useState('');
   const [sortBy, setSortBy] = useState<'NEWEST' | 'LEAST_ACCURATE' | 'MOST_PLAYED'>('NEWEST');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -53,7 +57,7 @@ export const StackExplorer: React.FC<StackExplorerProps> = ({
     return matches
       .filter((m) => {
         if (searchTerm.trim() !== '') {
-          const s = searchTerm.toLowerCase();
+          const s = searchTerm.trim().toLowerCase();
           const matchLabel = (m.label || '').toLowerCase().includes(s);
           const matchNotes = (m.notes || '').toLowerCase().includes(s);
           const matchTags = m.tags.some((t) => t.toLowerCase().includes(s));
@@ -75,6 +79,19 @@ export const StackExplorer: React.FC<StackExplorerProps> = ({
           return false;
         }
 
+        if (dateFrom && m.createdAt < new Date(`${dateFrom}T00:00:00`).getTime()) {
+          return false;
+        }
+        if (dateTo && m.createdAt > new Date(`${dateTo}T23:59:59.999`).getTime()) {
+          return false;
+        }
+
+        if (minOdds !== '' || maxOdds !== '') {
+          if (m.referenceOdds === undefined) return false;
+          if (minOdds !== '' && m.referenceOdds < Number(minOdds)) return false;
+          if (maxOdds !== '' && m.referenceOdds > Number(maxOdds)) return false;
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -87,7 +104,17 @@ export const StackExplorer: React.FC<StackExplorerProps> = ({
         }
         return 0;
       });
-  }, [matches, searchTerm, filterOutcome, filterCompleteness, selectedTag, sortBy]);
+  }, [matches, searchTerm, filterOutcome, filterCompleteness, selectedTag, dateFrom, dateTo, minOdds, maxOdds, sortBy]);
+
+  const hasActiveFilters =
+    searchTerm.trim() !== '' ||
+    filterOutcome !== 'ALL' ||
+    filterCompleteness !== 'ALL' ||
+    selectedTag !== 'ALL' ||
+    dateFrom !== '' ||
+    dateTo !== '' ||
+    minOdds !== '' ||
+    maxOdds !== '';
 
   const handleDelete = async (id: string, label?: string) => {
     if (window.confirm(`Confirmer la suppression de la fiche match "${label || id}" ?`)) {
@@ -252,6 +279,64 @@ export const StackExplorer: React.FC<StackExplorerProps> = ({
                 </option>
               ))}
             </select>
+          )}
+
+          <label className="flex items-center gap-1.5 text-slate-400">
+            Du
+            <input
+              type="date"
+              aria-label="Date de début"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-slate-300 dark:border-[#1e2e4f] dark:bg-[#090f1d] light:border-slate-200 light:bg-slate-100 light:text-slate-700"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-slate-400">
+            Au
+            <input
+              type="date"
+              aria-label="Date de fin"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-slate-300 dark:border-[#1e2e4f] dark:bg-[#090f1d] light:border-slate-200 light:bg-slate-100 light:text-slate-700"
+            />
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            aria-label="Cote minimum"
+            placeholder="Cote min."
+            value={minOdds}
+            onChange={(e) => setMinOdds(e.target.value)}
+            className="w-24 rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-slate-300 dark:border-[#1e2e4f] dark:bg-[#090f1d] light:border-slate-200 light:bg-slate-100 light:text-slate-700"
+          />
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            aria-label="Cote maximum"
+            placeholder="Cote max."
+            value={maxOdds}
+            onChange={(e) => setMaxOdds(e.target.value)}
+            className="w-24 rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-slate-300 dark:border-[#1e2e4f] dark:bg-[#090f1d] light:border-slate-200 light:bg-slate-100 light:text-slate-700"
+          />
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setFilterOutcome('ALL');
+                setFilterCompleteness('ALL');
+                setSelectedTag('ALL');
+                setDateFrom('');
+                setDateTo('');
+                setMinOdds('');
+                setMaxOdds('');
+              }}
+              className="rounded-lg px-2 py-1 text-slate-400 hover:bg-white/5 hover:text-white"
+            >
+              Effacer les filtres
+            </button>
           )}
 
           {/* Tri */}

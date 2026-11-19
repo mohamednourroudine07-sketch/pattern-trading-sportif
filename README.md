@@ -11,6 +11,7 @@ Application web **Local-First (SPA)** d'entraînement visuel et décisionnel des
 * **Outil de Rognage Interactif :** Rognez la zone des cotes au moment de l'ingestion (ou plus tard en modification) pour éliminer les barres d'état Android / navigateurs.
 * **Rétablir la Forme Complète :** Rétablissez à tout moment la photo originale intégrale à 100% en un clic grâce à la conservation native de la source.
 * **Repères temporels clés :** Slots `~1'`, `~2'`, `~22'`, `~23'` réordonnables.
+* **Recherche avancée :** Filtrez les matchs par texte, issue, tag, complétude, date de création et plage de cotes.
 
 ### 2. Mode Entraînement & Plein Écran Haute Définition (F3 — `SnapshotViewer` & `DecisionPanel`)
 * **Mode Plein Écran (Fullscreen) :** Agrandissez la capture sur tout l'écran avec bouton plein écran ou raccourci pour scruter les micro-variations de cotes avec un zoom jusqu'à 400% (molette PC ou pincement tactile).
@@ -38,6 +39,7 @@ Application web **Local-First (SPA)** d'entraînement visuel et décisionnel des
   * Exportation des métadonnées brutes en **JSON**.
   * Restauration d'archive `.zip` en un clic.
   * Statistiques de stockage local (nombre de fiches, nombre de photos, taille totale en Mo).
+  * Rappel visuel de la date du dernier export ZIP et avertissement si aucune sauvegarde n'a été lancée sur cet appareil.
 * **Mode Nuit / Mode Jour (AiScore Dark / Light) :** Bascule en un clic avec icônes Soleil / Lune et persistance automatique.
 * **Design "Minimaliste Complexe" inspiré d'AiScore :** Typographie haute densité, chiffres tabulaires monospaces, touches fluorescentes bleu électrique / cyan / vert / orange, bordures ultra-fines et micro-animations.
 
