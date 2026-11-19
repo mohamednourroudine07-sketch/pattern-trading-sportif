@@ -29,6 +29,7 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Optimisation Photos Verticales (Smartphone)
@@ -129,6 +130,34 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.25 : -0.25;
     setZoomLevel((z) => Math.max(1, Math.min(4, z + delta)));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1 || (e.target as HTMLElement).closest('button')) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    const end = e.changedTouches[0];
+    touchStartRef.current = null;
+    if (!start || !end) return;
+
+    const deltaX = end.clientX - start.x;
+    const deltaY = end.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+
+    const nextIndex = deltaX < 0 ? activeSlotIndex + 1 : activeSlotIndex - 1;
+    if (nextIndex >= 0 && nextIndex < match.snapshots.length) {
+      onSlotChange(nextIndex);
+    }
   };
 
   const toggleFullscreen = () => {
@@ -251,6 +280,9 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{ touchAction: 'pan-y pinch-zoom' }}
       >
         {activeUrl ? (
           <div
@@ -289,6 +321,10 @@ export const SnapshotViewer: React.FC<SnapshotViewerProps> = ({
         >
           <ChevronRight className="w-5 h-5" />
         </button>
+
+        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[10px] text-slate-300 sm:hidden pointer-events-none">
+          Glisse à gauche ou à droite pour changer de capture
+        </span>
 
         {/* Badge Flottant Info Minute */}
         <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full flex items-center gap-2">

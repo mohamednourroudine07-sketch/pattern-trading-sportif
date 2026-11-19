@@ -53,6 +53,7 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
 
   // Stats de la session en cours
   const [sessionLogs, setSessionLogs] = useState<TrainingDecisionLog[]>([]);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState<{
     match: MatchRecord;
     log: TrainingDecisionLog;
@@ -173,9 +174,30 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
     }
   };
 
+  const handleFinishSession = () => {
+    if (sessionLogs.length > 0) {
+      setIsSummaryOpen(true);
+    } else {
+      onFinishSession();
+    }
+  };
+
   const sessionPnL = sessionLogs.reduce((sum, l) => sum + l.pnlUnits, 0);
   const sessionBets = sessionLogs.filter((l) => l.stakeAction !== 'NO_BET');
   const sessionWins = sessionBets.filter((l) => l.isPredictionCorrect).length;
+  const sessionMistakes = sessionBets.filter((l) => !l.isPredictionCorrect);
+  const disciplineIssues = sessionLogs.filter((l) => !l.isDisciplineValid).length;
+  const skippedBets = sessionLogs.filter((l) => l.stakeAction === 'NO_BET').length;
+  const mistakeTags = new Map<string, number>();
+  for (const log of sessionMistakes) {
+    const match = allMatches.find((item) => item.id === log.matchId);
+    for (const tag of match?.tags ?? []) {
+      mistakeTags.set(tag, (mistakeTags.get(tag) || 0) + 1);
+    }
+  }
+  const frequentMistakeTags = Array.from(mistakeTags.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
   const sessionWinRate =
     sessionBets.length > 0 ? Math.round((sessionWins / sessionBets.length) * 100) : 0;
 
@@ -203,7 +225,7 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-lg">
         <div className="flex items-center gap-3">
           <button
-            onClick={onFinishSession}
+            onClick={handleFinishSession}
             className="p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -303,6 +325,81 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
           log={currentFeedback.log}
           onNextMatch={handleNextMatch}
         />
+      )}
+
+      {isSummaryOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="session-summary-title"
+            className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-5"
+          >
+            <div>
+              <h2 id="session-summary-title" className="text-lg font-black text-white">
+                Bilan de la session
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Résultats de tes {sessionLogs.length} décision{sessionLogs.length > 1 ? 's' : ''}.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="block text-[10px] uppercase text-slate-500">Précision des paris</span>
+                <strong className="text-sm text-white">
+                  {sessionWinRate}% ({sessionWins}/{sessionBets.length})
+                </strong>
+              </div>
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="block text-[10px] uppercase text-slate-500">Résultat de la session</span>
+                <strong className={sessionPnL >= 0 ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>
+                  {sessionPnL >= 0 ? '+' : ''}{sessionPnL.toFixed(2)} u
+                </strong>
+              </div>
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="block text-[10px] uppercase text-slate-500">Prédictions incorrectes</span>
+                <strong className="text-sm text-white">{sessionMistakes.length}</strong>
+              </div>
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="block text-[10px] uppercase text-slate-500">Passes / discipline</span>
+                <strong className="text-sm text-white">
+                  {skippedBets} passe{skippedBets > 1 ? 's' : ''} · {disciplineIssues} écart{disciplineIssues > 1 ? 's' : ''}
+                </strong>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 p-3">
+              <h3 className="text-xs font-bold text-slate-200">Situations associées aux erreurs</h3>
+              {frequentMistakeTags.length > 0 ? (
+                <ul className="mt-2 space-y-1 text-xs text-slate-400">
+                  {frequentMistakeTags.map(([tag, count]) => (
+                    <li key={tag}>#{tag} — {count} erreur{count > 1 ? 's' : ''}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">
+                  Aucune erreur avec tag associé dans cette session.
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsSummaryOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700"
+              >
+                Continuer
+              </button>
+              <button
+                onClick={onFinishSession}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500"
+              >
+                Retour à la base
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

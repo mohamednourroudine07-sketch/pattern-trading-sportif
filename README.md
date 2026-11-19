@@ -78,7 +78,17 @@ L'application s'ouvre sur : **http://localhost:5173/**
 3. Envoyez les fichiers sur la branche `main`. Le workflow `.github/workflows/deploy.yml` construit et publie automatiquement l’application.
 4. L’adresse sera `https://mohamednourroudine07-sketch.github.io/pattern-trading-sportif/`.
 
-Les données restent enregistrées séparément dans le navigateur de chaque appareil. Pour installer l’application, ouvrez cette adresse sur Android avec Chrome, puis choisissez **⋮ → Installer l’application**. Sur Windows, utilisez l’icône d’installation dans la barre d’adresse de Chrome ou Edge.
+### Activer la synchronisation cloud avec Supabase
+
+1. Créez un projet Supabase et exécutez le contenu de `supabase/setup.sql` dans le **SQL Editor** du projet.
+2. Dans **Project Settings → API**, récupérez l’URL du projet et la clé publique **anon/publishable**. Cette clé sera intégrée à l’application web ; les règles RLS du script protègent les données. N’utilisez jamais la clé `service_role`.
+3. Dans GitHub, ouvrez **Settings → Secrets and variables → Actions** et créez `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` avec ces valeurs.
+4. Dans Supabase, ajoutez `https://mohamednourroudine07-sketch.github.io/pattern-trading-sportif/` aux URL autorisées sous **Authentication → URL Configuration**.
+5. Publiez une nouvelle version. Dans **Données**, crée un compte avec ton e-mail, connecte-toi au même compte sur tes deux appareils, puis lance une première fois **Synchroniser maintenant** pour fusionner les données.
+
+Après cette première synchronisation, chaque appareil envoie automatiquement sa sauvegarde au cloud 5 secondes après une modification. Pour récupérer sur un appareil les nouveautés enregistrées depuis un autre, lance **Synchroniser maintenant** sur cet appareil. Les sauvegardes cloud sont privées par compte et limitées à 50 Mo par appareil. La synchronisation fusionne les ajouts et modifications ; elle ne propage pas la suppression d’une fiche.
+
+Pour installer l’application, ouvrez l’adresse du site sur Android avec Chrome, puis choisissez **⋮ → Installer l’application**. Sur Windows, utilisez l’icône d’installation dans la barre d’adresse de Chrome ou Edge.
 
 ### Compilation de production
 ```powershell

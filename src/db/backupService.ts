@@ -19,6 +19,7 @@ export interface BackupData {
   matches: BackupMatchRecord[];
   trainingLogs: TrainingDecisionLog[];
   strategyConfig: StrategyConfig;
+  strategyConfigUpdatedAt?: number;
 }
 
 export interface DatabaseStats {
@@ -66,6 +67,7 @@ export class BackupService {
     const matches = await db.matches.toArray();
     const logs = await db.training_logs.toArray();
     const config = await db.getStrategyConfig();
+    const strategyConfigUpdatedAt = await db.getStrategyConfigUpdatedAt();
 
     const serializableMatches: BackupMatchRecord[] = [];
 
@@ -111,6 +113,7 @@ export class BackupService {
       matches: serializableMatches,
       trainingLogs: logs,
       strategyConfig: config,
+      strategyConfigUpdatedAt,
     };
 
     zip.file('manifest.json', JSON.stringify(backupManifest, null, 2));
@@ -231,7 +234,10 @@ export class BackupService {
   /**
    * Importe une archive ZIP complète dans la base IndexedDB
    */
-  static async importFromZip(file: File): Promise<{ matchesCount: number; logsCount: number }> {
+  static async importFromZip(
+    file: File,
+    options: { mergeByUpdatedAt?: boolean } = {}
+  ): Promise<{ matchesCount: number; logsCount: number }> {
     const zip = await JSZip.loadAsync(file);
     const manifestFile = zip.file('manifest.json');
     if (!manifestFile) {
@@ -284,13 +290,23 @@ export class BackupService {
 
     await db.transaction('rw', db.matches, db.training_logs, db.user_settings, async () => {
       for (const m of restoredMatches) {
+        if (options.mergeByUpdatedAt) {
+          const existing = await db.matches.get(m.id);
+          if (existing && existing.updatedAt > m.updatedAt) continue;
+        }
         await db.matches.put(m);
       }
       for (const log of manifest.trainingLogs || []) {
         await db.training_logs.put(log);
       }
       if (manifest.strategyConfig) {
-        await db.saveStrategyConfig(manifest.strategyConfig);
+        const backupConfigUpdatedAt = manifest.strategyConfigUpdatedAt ?? manifest.exportedAt;
+        const currentConfigUpdatedAt = options.mergeByUpdatedAt
+          ? await db.getStrategyConfigUpdatedAt()
+          : 0;
+        if (!options.mergeByUpdatedAt || backupConfigUpdatedAt >= currentConfigUpdatedAt) {
+          await db.saveStrategyConfig(manifest.strategyConfig, backupConfigUpdatedAt);
+        }
       }
     });
 

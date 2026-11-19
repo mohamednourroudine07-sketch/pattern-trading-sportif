@@ -29,11 +29,16 @@ export class BetPatternDatabase extends Dexie {
     return DEFAULT_STRATEGY_CONFIG;
   }
 
-  async saveStrategyConfig(config: StrategyConfig): Promise<void> {
-    await this.user_settings.put({
-      key: 'strategy_config',
-      value: config,
-    });
+  async getStrategyConfigUpdatedAt(): Promise<number> {
+    const item = await this.user_settings.get('strategy_config_updated_at');
+    return typeof item?.value === 'number' ? item.value : 0;
+  }
+
+  async saveStrategyConfig(config: StrategyConfig, updatedAt = Date.now()): Promise<void> {
+    await this.user_settings.bulkPut([
+      { key: 'strategy_config', value: config },
+      { key: 'strategy_config_updated_at', value: updatedAt },
+    ]);
   }
 }
 

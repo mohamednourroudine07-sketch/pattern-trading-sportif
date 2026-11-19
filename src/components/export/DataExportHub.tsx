@@ -6,6 +6,7 @@ import {
 } from '../../db/backupService';
 import { SyncService } from '../../services/syncService';
 import { seedDemoData } from '../../db/seedData';
+import { CloudSyncPanel } from './CloudSyncPanel';
 import {
   Download,
   Upload,
@@ -40,6 +41,13 @@ export const DataExportHub: React.FC<DataExportHubProps> = ({ onDataReloaded }) 
 
   const importInputRef = useRef<HTMLInputElement>(null);
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const hostname = window.location.hostname;
+  const isLocalNetwork =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    /^192\.168\./.test(hostname) ||
+    /^10\./.test(hostname) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
 
   const refreshStats = async () => {
     try {
@@ -210,6 +218,7 @@ export const DataExportHub: React.FC<DataExportHubProps> = ({ onDataReloaded }) 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
       {/* 1. SECTION SPÉCIALE : SYNCHRONISATION DIRECTE TÉLÉPHONE ⇆ PC */}
+      {isLocalNetwork ? (
       <div className="bg-gradient-to-r from-blue-900/30 via-[#0e131f] to-indigo-900/30 dark:bg-[#0e131f] light:bg-white border-2 border-blue-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -260,6 +269,9 @@ export const DataExportHub: React.FC<DataExportHubProps> = ({ onDataReloaded }) 
           </div>
         </div>
       </div>
+      ) : (
+        <CloudSyncPanel onDataReloaded={onDataReloaded} />
+      )}
 
       {/* 2. HEADER DU HUB DE DONNÉES */}
       <div className="bg-[#0e131f] dark:bg-[#0e131f] light:bg-white border border-white/10 dark:border-white/10 light:border-slate-200 rounded-3xl p-6 shadow-xl relative overflow-hidden">
